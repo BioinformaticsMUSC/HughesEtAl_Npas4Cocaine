@@ -11,6 +11,10 @@ If you use anything in this repository please cite the following publication:
 
 Pre-print URL: 
 
+## Access the data with an app:
+
+[Npas4 Cocaine App](https://bioinformatics-musc.shinyapps.io/Brandon_et_all_2022/)
+
 ## Files
 
 | directory | contents | code |
