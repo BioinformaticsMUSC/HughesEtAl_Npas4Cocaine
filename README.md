@@ -1,7 +1,7 @@
 NPAS4 controls cell type-specific circuit adaptations underlying drug seeking behavior 
 ==========================
 
-![](snRNA-seq Experimental Design_HughesBW.jpg)
+![](Design.jpg)
 
 This repository contains analysis code for the single nuclei RNA-seq project carried out by researchers at the [Cowan lab, MUSC](https://medicine.musc.edu/departments/neuroscience/research/cowan) and [Berto Lab, MUSC](https://bertolab.org/)
 
