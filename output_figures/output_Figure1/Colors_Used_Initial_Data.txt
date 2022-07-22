@@ -1,0 +1,21 @@
+Cells	Colors
+1	Interneurons_Pvalb+	#D687E4
+2	MSN_Drd1+_1	#67E5C8
+3	MSN_Drd2+_1	#D85BA6
+4	Interneurons_Th+	#CDE5C1
+5	Interneurons_Chat+	#C5D982
+6	Interneurons_Pnoc+	#D5DE4C
+7	MSN_Drd1+_2	#E56A69
+8	MSN_Drd2+_2	#6E46E0
+9	Oligodendrocytes	#74A0D7
+10	MSN_Grm8+_2	#827AD9
+11	Interneurons_Sst+	#679D7E
+12	MSN_Grm8+_1	#E1B79E
+13	MSN_Drd1+_3	#CCD0DE
+14	Astrocytes	#DEADDB
+15	OPC	#78D0E0
+16	Endothelial	#9F7389
+17	Neuroblast	#6FE48F
+18	MSN_Drd3+_1	#D74ADC
+19	Microglia	#DAA248
+20	Interneurons_Ndnf+	#86E944
