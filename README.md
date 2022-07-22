@@ -20,4 +20,4 @@ Pre-print URL:
 | [`output_figures`](output_figures/) | Output for figures and additional visualizations. | 08_DGE_visualizations.r |
 | [`shinyApp`](shinyApp/) | Output of the ShinyApp. | 09_ShinyApp.r|
 
-![](Design.jpg)
+![](design.png)
