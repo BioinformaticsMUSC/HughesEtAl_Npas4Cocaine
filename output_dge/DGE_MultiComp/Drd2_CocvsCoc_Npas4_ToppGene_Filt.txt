@@ -1,0 +1,6 @@
+Category	Name	FDR	Ngenes
+Function	dendrite	1.14E-07	20
+Function	synapse	7.13E-12	35
+Function	neuron projection	1.82E-10	34
+Drug	Cocaine	3.90E-09	26
+Drug	Dopamine	5.24E-06	9

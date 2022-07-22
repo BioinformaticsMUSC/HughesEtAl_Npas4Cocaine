@@ -1,0 +1,6 @@
+Category	Name	FDR	Ngenes
+Function	nervous system development	1.29E-05	27
+Function	brain development	1.06E-04	14
+Function	synapse	4.43E-04	15
+Drug	Cocaine	1.94E-09	20
+Drug	Amphetamine	6.89E-06	6
