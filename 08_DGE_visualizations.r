@@ -914,3 +914,176 @@ map(listdata, ~ (.x %>% select(gene, avg_logFC))) %>%
 dev.off()
 
 
+
+#############################
+# Intersection Drd1 vs Drd2 #
+#############################
+
+# SalVsCoc_CPP
+
+a <- tmp1 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd1+_1") %>%
+    mutate(Class = "Drd1") %>%
+    select(gene, Class)
+
+b <- tmp1 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd2+_1") %>%
+    mutate(Class = "Drd2") %>%
+    select(gene, Class)
+
+
+pdf("output_figures/output_Figure2/UpsetPlot_Drd1vsDrd2_SalCPPVsCocCPP.pdf",width=5,height=3,useDingbats=FALSE)
+tmpUpset <- rbind(a,b)
+l <- split(as.character(tmpUpset$gene),tmpUpset$Class)
+Class <- names(l)
+ToTGene <- as.numeric(sapply(l, length))
+metadata <- as.data.frame(cbind(Class, ToTGene))
+names(metadata) <- c("Class", "ToTGene")
+metadata$ToTGene <- as.numeric(as.character(metadata$ToTGene))
+upset(fromList(l),nsets = 6, set.metadata = list(data = metadata, plots = list(list(type = "hist", 
+    column = "ToTGene", assign = 20), 
+    list(type = "matrix_rows", column = "sets", colors = c(Drd1 = "#67E5C8", Drd2 = "#D85BA6"), 
+    alpha = 0.5))))
+dev.off()
+
+# DE_salcoc_npas4
+
+a <- tmp2 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd1+_1") %>%
+    mutate(Class = "Drd1") %>%
+    select(gene, Class)
+
+b <- tmp2 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd2+_1") %>%
+    mutate(Class = "Drd2") %>%
+    select(gene, Class)
+
+
+pdf("output_figures/output_Figure2/UpsetPlot_Drd1vsDrd2_SalNPAS4VsCocNPAS4.pdf",width=5,height=3,useDingbats=FALSE)
+tmpUpset <- rbind(a,b)
+l <- split(as.character(tmpUpset$gene),tmpUpset$Class)
+Class <- names(l)
+ToTGene <- as.numeric(sapply(l, length))
+metadata <- as.data.frame(cbind(Class, ToTGene))
+names(metadata) <- c("Class", "ToTGene")
+metadata$ToTGene <- as.numeric(as.character(metadata$ToTGene))
+upset(fromList(l),nsets = 6, set.metadata = list(data = metadata, plots = list(list(type = "hist", 
+    column = "ToTGene", assign = 20), 
+    list(type = "matrix_rows", column = "sets", colors = c(Drd1 = "#67E5C8", Drd2 = "#D85BA6"), 
+    alpha = 0.5))))
+dev.off()
+
+# DE_saline
+
+a <- tmp3 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd1+_1") %>%
+    mutate(Class = "Drd1") %>%
+    select(gene, Class)
+
+b <- tmp3 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd2+_1") %>%
+    mutate(Class = "Drd2") %>%
+    select(gene, Class)
+
+
+pdf("output_figures/output_Figure2/UpsetPlot_Drd1vsDrd2_SalCPPVsSalNPAS4.pdf",width=5,height=3,useDingbats=FALSE)
+tmpUpset <- rbind(a,b)
+l <- split(as.character(tmpUpset$gene),tmpUpset$Class)
+Class <- names(l)
+ToTGene <- as.numeric(sapply(l, length))
+metadata <- as.data.frame(cbind(Class, ToTGene))
+names(metadata) <- c("Class", "ToTGene")
+metadata$ToTGene <- as.numeric(as.character(metadata$ToTGene))
+upset(fromList(l),nsets = 6, set.metadata = list(data = metadata, plots = list(list(type = "hist", 
+    column = "ToTGene", assign = 20), 
+    list(type = "matrix_rows", column = "sets", colors = c(Drd1 = "#67E5C8", Drd2 = "#D85BA6"), 
+    alpha = 0.5))))
+dev.off()
+
+# DE_cocaine
+
+a <- tmp4 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd1+_1") %>%
+    mutate(Class = "Drd1") %>%
+    select(gene, Class)
+
+b <- tmp4 %>%
+    as.data.frame() %>%
+    filter(cell_type == "MSN_Drd2+_1") %>%
+    mutate(Class = "Drd2") %>%
+    select(gene, Class)
+
+
+pdf("output_figures/output_Figure2/UpsetPlot_Drd1vsDrd2_CocCPPVsCocNPAS4.pdf",width=5,height=3,useDingbats=FALSE)
+tmpUpset <- rbind(a,b)
+l <- split(as.character(tmpUpset$gene),tmpUpset$Class)
+Class <- names(l)
+ToTGene <- as.numeric(sapply(l, length))
+metadata <- as.data.frame(cbind(Class, ToTGene))
+names(metadata) <- c("Class", "ToTGene")
+metadata$ToTGene <- as.numeric(as.character(metadata$ToTGene))
+upset(fromList(l),nsets = 6, set.metadata = list(data = metadata, plots = list(list(type = "hist", 
+    column = "ToTGene", assign = 20), 
+    list(type = "matrix_rows", column = "sets", colors = c(Drd1 = "#67E5C8", Drd2 = "#D85BA6"), 
+    alpha = 0.5))))
+dev.off()
+
+# Scatter plot fold changes Drd1 vs Drd2
+# Fold Change Correlations
+tmp1 <- DE_salcoc %>% 
+        dplyr::select(cell_type,gene,avg_logFC) %>%
+        dplyr::rename(logFC_SalCPPVsCocCPP = avg_logFC) %>%
+        filter(cell_type %in% c("MSN_Drd2+_1","MSN_Drd1+_1")) %>%
+        pivot_wider(names_from = cell_type, values_from = logFC_SalCPPVsCocCPP) %>%
+        mutate(Class = "SalCPPVsCocCPP")
+
+tmp2 <- DE_salcoc_npas4 %>% 
+        dplyr::select(cell_type,gene,avg_logFC) %>%
+        dplyr::rename(logFC_SalNpas4VsCocNpas4 = avg_logFC) %>%
+        filter(cell_type %in% c("MSN_Drd2+_1","MSN_Drd1+_1")) %>%
+        pivot_wider(names_from = cell_type, values_from = logFC_SalNpas4VsCocNpas4) %>%
+        mutate(Class = "SalNpas4VsCocNpas4")
+
+tmp3 <- DE_saline %>% 
+        dplyr::select(cell_type,gene,avg_logFC) %>%
+        dplyr::rename(logFC_SalCppVsSalNpas4 = avg_logFC) %>%
+        filter(cell_type %in% c("MSN_Drd2+_1","MSN_Drd1+_1")) %>%
+        pivot_wider(names_from = cell_type, values_from = logFC_SalCppVsSalNpas4) %>%
+        mutate(Class = "SalCppVsSalNpas4")
+
+
+tmp4 <- DE_cocaine %>% 
+        dplyr::select(cell_type,gene,avg_logFC) %>%
+        dplyr::rename(logFC_CocCppVsCocNpas4 = avg_logFC) %>%
+        filter(cell_type %in% c("MSN_Drd2+_1","MSN_Drd1+_1")) %>%
+        pivot_wider(names_from = cell_type, values_from = logFC_CocCppVsCocNpas4) %>%
+        mutate(Class = "CocCppVsCocNpas4")
+
+
+combined <- rbind(tmp4,tmp1,tmp3,tmp2)
+colnames(combined) <- c("gene","Drd2","Drd1","Class")
+
+
+pdf("output_figures/output_Figure2/Scatter_FoldChange.pdf",width=5,height=5,useDingbats=FALSE)
+combined %>%
+mutate(Class=fct_relevel(Class,c("SalCPPVsCocCPP","CocCppVsCocNpas4","SalCppVsSalNpas4","SalNpas4VsCocNpas4"))) %>%
+ggplot(aes(x=Drd1, y=Drd2)) +
+ggrastr::geom_point_rast(aes(colour = Class),size=0.5) +
+      xlab("Drd1 log2(Fold Change)")+ 
+      ylab("Drd2 log2(Fold Change)")+
+      geom_vline(xintercept = 0, colour = "grey",linetype="dotted",size=1,alpha=0.5) +
+      geom_hline(yintercept = 0, colour = "grey",linetype="dotted",size=1,alpha=0.5) +
+      theme(legend.position="none") +
+    facet_wrap(.~Class) + 
+    xlim(-1.5,1.5) + 
+    ylim(-1.5,1.5) + 
+  stat_cor(aes(color = Class), method = "spearman", label.y = 1.5) +
+  scale_colour_manual(values = c("#F0BE3D","#04A3BD","#247D3F","#DA7901"))   # customized color palette
+dev.off()
