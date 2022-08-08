@@ -13,7 +13,8 @@ Pre-print URL:
 
 ## Access the data with an app:
 
-[Npas4 Cocaine App](https://bioinformatics-musc.shinyapps.io/Brandon_et_all_2022/)
+Here a webapp to analyze the data: 
+[Npas4 Cocaine NAc App](https://bioinformatics-musc.shinyapps.io/Hughes_NAc_Cocaine_Npas4/)
 
 ## Files
 
