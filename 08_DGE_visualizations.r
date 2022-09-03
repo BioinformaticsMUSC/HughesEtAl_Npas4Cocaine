@@ -1087,3 +1087,5 @@ ggrastr::geom_point_rast(aes(colour = Class),size=0.5) +
   stat_cor(aes(color = Class), method = "spearman", label.y = 1.5) +
   scale_colour_manual(values = c("#F0BE3D","#04A3BD","#247D3F","#DA7901"))   # customized color palette
 dev.off()
+
+

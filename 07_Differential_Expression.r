@@ -12,12 +12,12 @@ library(broom)
 library(muscat)
 library(Seurat)
 library(clustree)
-library(leiden)
 library(data.table)
 library(cowplot)
 library(scDblFinder)
 library(BiocSingular)
 library(Libra)
+library(clusterProfiler)
 })
 source("utils/Utils.R")
 
@@ -93,12 +93,16 @@ openxlsx::write.xlsx(DE_salcoc_npas4_sign,
                      sheetName="Stats")
 write.table(DE_salcoc_npas4_sign,"output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4.txt",sep="\t",quote=F)
 
-# Convert in Human ID
-
+#######################
+# Convert in Human ID #
+#######################
 human = biomauseMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset="hsapiens_gene_ensembl")
 mouse = useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset="mmusculus_gene_ensembl")
 
-# Load Data Saline vs Cocaine
+#######################################
+# Load Data Saline CPP vs Cocaine CPP #
+#######################################
+
 dge <- read.table("output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP.txt",header=T)
 
 dge <- dge %>%
@@ -120,19 +124,54 @@ write.table(dge,"output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP_MouseID.txt",sep
 write.table(dge_human,"output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP_HumanID.txt",sep="\t",quote=F,row.names=F)
 
 
+# Gene Onto
+dir.create("output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP_functional_enrichment/")
+dge <- read.table("output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP_HumanID.txt",header=T)
+l <- split(dge, dge$cell_type)
+l <- l[sapply(l, nrow)>0] #remove objects with less than one gene
 
-# Load Data SalineNPAS vs CocaineNPAS4
+GOI <- list()
+GeneOnto <- list()
+
+for(i in 1:length(l)){
+GOI[[i]] <- bitr(as.character(l[[i]]$Gene),  
+                        fromType = "SYMBOL", 
+                        toType = c("ENSEMBL", "ENTREZID"), 
+                        OrgDb = org.Hs.eg.db::org.Hs.eg.db)
+
+GeneOnto[[i]] <- enrichGO(gene = unique(GOI[[i]]$ENTREZID), 
+                     keyType = "ENTREZID", 
+                     OrgDb = org.Hs.eg.db::org.Hs.eg.db, 
+                     ont = "BP", 
+                     pAdjustMethod = "BH", 
+                     pvalueCutoff  = 0.2, 
+                     qvalueCutoff = 0.2, 
+                     readable = TRUE)
+
+openxlsx::write.xlsx(as.data.frame(GeneOnto[[i]]), 
+                     file = sprintf("output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP_functional_enrichment/%s.GO.xlsx", names(l)[[i]]), 
+                     colNames = TRUE,
+                     rowNames = TRUE, 
+                     borders = "columns",
+                     sheetName="GeneOnto", 
+                     overwrite = TRUE)
+
+
+PLOT <- dotplot(GeneOnto[[i]])
+print(PLOT)
+ggsave(sprintf("output_dge/DGE_MultiComp/SalineCPPvsCocaineCPP_functional_enrichment/%s.pdf", names(l)[[i]]))
+
+}
+
+########################################
+# Load Data SalineNPAS vs CocaineNPAS4 #
+########################################
 dge <- read.table("output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4.txt",header=T)
 
 dge <- dge %>%
         dplyr::select(gene,cell_type) %>%
         dplyr::rename(Gene = gene) %>%
         arrange(cell_type)
-
-
-# Convert to human 
-#human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-#mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
 
 MGI = getLDS(attributes = c("mgi_symbol"), filters = "mgi_symbol", values = dge$Gene,mart = mouse, attributesL = c("hgnc_symbol"), martL = human, uniqueRows=T)
 
@@ -148,7 +187,49 @@ write.table(dge,"output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4_MouseID.txt"
 write.table(dge_human,"output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4_HumanID.txt",sep="\t",quote=F,row.names=F)
 
 
-# Load Data SalineCCP vs SalineNPAS4
+# Gene Onto
+dir.create("output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4_functional_enrichment/")
+dge <- read.table("output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4_HumanID.txt",header=T)
+l <- split(dge, dge$cell_type)
+l <- l[sapply(l, nrow)>0] #remove objects with less than one gene
+
+GOI <- list()
+GeneOnto <- list()
+
+for(i in 1:length(l)){
+GOI[[i]] <- bitr(as.character(l[[i]]$Gene),  
+                        fromType = "SYMBOL", 
+                        toType = c("ENSEMBL", "ENTREZID"), 
+                        OrgDb = org.Hs.eg.db::org.Hs.eg.db)
+
+GeneOnto[[i]] <- enrichGO(gene = unique(GOI[[i]]$ENTREZID), 
+                     keyType = "ENTREZID", 
+                     OrgDb = org.Hs.eg.db::org.Hs.eg.db, 
+                     ont = "BP", 
+                     pAdjustMethod = "BH", 
+                     pvalueCutoff  = 0.2, 
+                     qvalueCutoff = 0.2, 
+                     readable = TRUE)
+
+openxlsx::write.xlsx(as.data.frame(GeneOnto[[i]]), 
+                     file = sprintf("output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4_functional_enrichment/%s.GO.xlsx", names(l)[[i]]), 
+                     colNames = TRUE,
+                     rowNames = TRUE, 
+                     borders = "columns",
+                     sheetName="GeneOnto", 
+                     overwrite = TRUE)
+
+
+PLOT <- dotplot(GeneOnto[[i]])
+print(PLOT)
+ggsave(sprintf("output_dge/DGE_MultiComp/SalineNPAS4vsCocaineNPAS4_functional_enrichment/%s.pdf", names(l)[[i]]))
+
+}
+
+
+######################################
+# Load Data SalineCCP vs SalineNPAS4 #
+######################################
 dge <- read.table("output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4.txt",header=T)
 
 dge <- dge %>%
@@ -174,7 +255,48 @@ dge_human <- dge_human %>%
 write.table(dge,"output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4_MouseID.txt",sep="\t",quote=F,row.names=F)
 write.table(dge_human,"output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4_HumanID.txt",sep="\t",quote=F,row.names=F)
 
-# Load Data CocaineCCP vs CocaineNPAS4
+
+# Gene Onto
+dir.create("output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4_functional_enrichment/")
+dge <- read.table("output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4_HumanID.txt",header=T)
+l <- split(dge, dge$cell_type)
+l <- l[sapply(l, nrow)>0] #remove objects with less than one gene
+
+GOI <- list()
+GeneOnto <- list()
+
+for(i in 1:length(l)){
+GOI[[i]] <- bitr(as.character(l[[i]]$Gene),  
+                        fromType = "SYMBOL", 
+                        toType = c("ENSEMBL", "ENTREZID"), 
+                        OrgDb = org.Hs.eg.db::org.Hs.eg.db)
+
+GeneOnto[[i]] <- enrichGO(gene = unique(GOI[[i]]$ENTREZID), 
+                     keyType = "ENTREZID", 
+                     OrgDb = org.Hs.eg.db::org.Hs.eg.db, 
+                     ont = "BP", 
+                     pAdjustMethod = "BH", 
+                     pvalueCutoff  = 0.2, 
+                     qvalueCutoff = 0.2, 
+                     readable = TRUE)
+
+openxlsx::write.xlsx(as.data.frame(GeneOnto[[i]]), 
+                     file = sprintf("output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4_functional_enrichment/%s.GO.xlsx", names(l)[[i]]), 
+                     colNames = TRUE,
+                     rowNames = TRUE, 
+                     borders = "columns",
+                     sheetName="GeneOnto", 
+                     overwrite = TRUE)
+
+
+PLOT <- dotplot(GeneOnto[[i]])
+print(PLOT)
+ggsave(sprintf("output_dge/DGE_MultiComp/SalineCPPvsSalineNPAS4_functional_enrichment/%s.pdf", names(l)[[i]]))
+}
+
+########################################
+# Load Data CocaineCCP vs CocaineNPAS4 #
+########################################
 dge <- read.table("output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4.txt",header=T)
 
 dge <- dge %>%
@@ -201,9 +323,48 @@ write.table(dge,"output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4_MouseID.txt",
 write.table(dge_human,"output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4_HumanID.txt",sep="\t",quote=F,row.names=F)
 
 
-##############################
-# DGE Cocaine NPAS4 Specific #
-##############################
+# Gene Onto
+dir.create("output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4_functional_enrichment/")
+dge <- read.table("output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4_HumanID.txt",header=T)
+l <- split(dge, dge$cell_type)
+l <- l[sapply(l, nrow)>0] #remove objects with less than one gene
+
+GOI <- list()
+GeneOnto <- list()
+
+for(i in 1:length(l)){
+GOI[[i]] <- bitr(as.character(l[[i]]$Gene),  
+                        fromType = "SYMBOL", 
+                        toType = c("ENSEMBL", "ENTREZID"), 
+                        OrgDb = org.Hs.eg.db::org.Hs.eg.db)
+
+GeneOnto[[i]] <- enrichGO(gene = unique(GOI[[i]]$ENTREZID), 
+                     keyType = "ENTREZID", 
+                     OrgDb = org.Hs.eg.db::org.Hs.eg.db, 
+                     ont = "BP", 
+                     pAdjustMethod = "BH", 
+                     pvalueCutoff  = 0.2, 
+                     qvalueCutoff = 0.2, 
+                     readable = TRUE)
+
+openxlsx::write.xlsx(as.data.frame(GeneOnto[[i]]), 
+                     file = sprintf("output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4_functional_enrichment/%s.GO.xlsx", names(l)[[i]]), 
+                     colNames = TRUE,
+                     rowNames = TRUE, 
+                     borders = "columns",
+                     sheetName="GeneOnto", 
+                     overwrite = TRUE)
+
+
+PLOT <- dotplot(GeneOnto[[i]])
+print(PLOT)
+ggsave(sprintf("output_dge/DGE_MultiComp/CocaineCPPvsCocaineNPAS4_functional_enrichment/%s.pdf", names(l)[[i]]))
+}
+
+
+#################################################
+# This is the analysis for Cocaine Specific DGE #
+#################################################
 
 load("output_reclust/Brandon_SCT_30pcs_04res_Reclust_NoDoublet_Slimmed_Relabel.RData")
 
@@ -403,15 +564,17 @@ colore <- c("#e69b00","#17154f","#355828","#b0799a")
 
 Shisa9<- GetAssayData(object=seuObject_slim_nodoub_slim,assay="RNA",slot="data")["Shisa9",] # For Drd1
 Cartpt<- GetAssayData(object=seuObject_slim_nodoub_slim,assay="RNA",slot="data")["Cartpt",] # For Drd1
+Penk<- GetAssayData(object=seuObject_slim_nodoub_slim,assay="RNA",slot="data")["Penk",] # For Drd1
+Tac1<- GetAssayData(object=seuObject_slim_nodoub_slim,assay="RNA",slot="data")["Tac1",] # For Drd1
 
 # Add to meta
 meta <- seuObject_slim_nodoub_slim@meta.data %>%
             as.data.frame() %>%
-            mutate(Shisa9 = log2(Shisa9+1), Cartpt = log2(Cartpt+1))
+            mutate(Shisa9 = log2(Shisa9+1), Cartpt = log2(Cartpt+1),Penk = log2(Penk+1), Tac1 = log2(Tac1+1))
 
 #my_comparisons <- list( c("SalineCPP", "CocaineCPP"), c("SalineNPAS4", "CocaineNPAS4"), c("CocaineCPP", "CocaineNPAS4"),c("SalineCPP", "SalineNPAS4") )
 
-pdf("output_dge/DGE_CocaineNPAS4_Specific/Shisa9_Expression_Drd2.pdf", width = 2, height = 4)
+pdf("output_dge/DGE_CocaineNPAS4_Specific/Shisa9_Expression_Drd2.pdf", width = 2, height = 3)
 meta %>%
 filter(Cell == "MSN_Drd2+_1") %>%
 #filter(Shisa9 > 0) %>%
@@ -426,7 +589,7 @@ ggerrorplot(x = "Genotype", y = "Shisa9",
         #ylim(1.6,2.2)
 dev.off()
 
-pdf("output_dge/DGE_CocaineNPAS4_Specific/Cartpt_Expression_Drd2.pdf", width = 2, height = 4)
+pdf("output_dge/DGE_CocaineNPAS4_Specific/Cartpt_Expression_Drd2.pdf", width = 2, height = 3)
 meta %>%
 filter(Cell == "MSN_Drd2+_1") %>%
 #filter(Shisa9 > 0) %>%
@@ -441,3 +604,32 @@ ggerrorplot(x = "Genotype", y = "Cartpt",
         #ylim(1.6,2.2)
 dev.off()
 
+pdf("output_dge/DGE_CocaineNPAS4_Specific/Penk_Expression_Drd2.pdf", width = 2, height = 3)
+meta %>%
+filter(Cell == "MSN_Drd2+_1") %>%
+#filter(Shisa9 > 0) %>%
+ggerrorplot(x = "Genotype", y = "Penk",
+            color = "Genotype", palette = colore, add = "mean", error.plot = "errorbar",
+            outlier.shape = NA)+ 
+  #stat_compare_means(comparisons = my_comparisons,label.y = c(2.1, 2.3, 2.5, 2.7)) +
+        theme(legend.position="none") +
+        rotate_x_text(angle = 45) +
+        xlab("") + 
+        ylab("Expression")
+        #ylim(1.6,2.2)
+dev.off()
+
+pdf("output_dge/DGE_CocaineNPAS4_Specific/Tac1_Expression_Drd2.pdf", width = 2, height = 3)
+meta %>%
+filter(Cell == "MSN_Drd2+_1") %>%
+#filter(Shisa9 > 0) %>%
+ggerrorplot(x = "Genotype", y = "Tac1",
+            color = "Genotype", palette = colore, add = "mean", error.plot = "errorbar",
+            outlier.shape = NA)+ 
+  #stat_compare_means(comparisons = my_comparisons,label.y = c(2.1, 2.3, 2.5, 2.7)) +
+        theme(legend.position="none") +
+        rotate_x_text(angle = 45) +
+        xlab("") + 
+        ylab("Expression")
+        #ylim(1.6,2.2)
+dev.off()
