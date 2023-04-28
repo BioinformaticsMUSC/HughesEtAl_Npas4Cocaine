@@ -11,6 +11,8 @@ If you use anything in this repository please cite the following publication:
 
 Pre-print URL: 
 
+https://www.biorxiv.org/content/10.1101/2022.09.04.506434v1.abstract
+
 ## Access the data with an app:
 
 Here a webapp to analyze the data: 
