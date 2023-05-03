@@ -17,61 +17,58 @@ library(data.table)
 library(cowplot)
 library(scDblFinder)
 library(BiocSingular)
-library(gprofiler2)
-
 })
 source("utils/Utils.R")
 
 #plan("multiprocess", workers = 10)
 options(future.globals.maxSize = 6000 * 1024^2)
 
-dir.create("output")
+dir.create("output_initial")
 
 #load protein coding genes
 load("utils/MgProteinCodingGenes.rda")
 
-WT_F <- Read10X_h5("input/7166-MR-74/CellBender_out_filtered.h5", use.names = TRUE, unique.features = TRUE)
-HET_F <- Read10X_h5("input/7166-MR-75/CellBender_out_filtered.h5", use.names = TRUE, unique.features = TRUE)
+SalineCPP <- Read10X_h5("input/5107-MR-85/CellBender_out_filtered.h5", use.names = TRUE, unique.features = TRUE)
+CocaineCPP <- Read10X_h5("input/5107-MR-86/CellBender_out_filtered.h5", use.names = TRUE, unique.features = TRUE)
+SalineNPAS4 <- Read10X_h5("input/5107-MR-87/CellBender_out_filtered.h5", use.names = TRUE, unique.features = TRUE)
+CocaineNPAS4 <- Read10X_h5("input/5107-MR-88/CellBender_out_filtered.h5", use.names = TRUE, unique.features = TRUE)
 
-WT_F <- WT_F[rownames(WT_F)%in%MgProteinCodingGenes,]
-HET_F <- HET_F[rownames(HET_F)%in%MgProteinCodingGenes,]
+SalineCPP <- SalineCPP[rownames(SalineCPP)%in%MgProteinCodingGenes,]
+CocaineCPP <- CocaineCPP[rownames(CocaineCPP)%in%MgProteinCodingGenes,]
+SalineNPAS4 <- SalineNPAS4[rownames(SalineNPAS4)%in%MgProteinCodingGenes,]
+CocaineNPAS4 <- CocaineNPAS4[rownames(CocaineNPAS4)%in%MgProteinCodingGenes,]
 
-WT_F_obj <- CreateSeuratObject(counts = WT_F,min.features = 100)
-HET_F_obj <- CreateSeuratObject(counts = HET_F,min.features = 100)
+SalineCPP_obj <- CreateSeuratObject(counts = SalineCPP,min.features = 100)
+CocaineCPP_obj <- CreateSeuratObject(counts = CocaineCPP,min.features = 100)
+SalineNPAS4_obj <- CreateSeuratObject(counts = SalineNPAS4,min.features = 100)
+CocaineNPAS4_obj <- CreateSeuratObject(counts = CocaineNPAS4,min.features = 100)
 
-seuObject <- merge(WT_F_obj, 
-                  y = c(HET_F_obj), 
-                  add.cell.ids = c("WT_F", "HET_F"), 
-                  project = "PFC_Het_F")
+seuObject <- merge(SalineCPP_obj, 
+                  y = c(CocaineCPP_obj,SalineNPAS4_obj,CocaineNPAS4_obj), 
+                  add.cell.ids = c("SalineCPP", "CocaineCPP","SalineNPAS4","CocaineNPAS4"), 
+                  project = "Brandon")
 
 seuObject[["pMito"]] <- PercentageFeatureSet(seuObject, pattern = "^mt-")
 
-# Add cell cycle score to regress
-mmus_s = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
-mmus_g2m = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
-
-
-seuObject <- CellCycleScoring(seuObject, s.features = mmus_s, g2m.features = mmus_g2m, set.ident = TRUE)
 
 seuObject@meta.data <- seuObject@meta.data %>%
 						rownames_to_column("Cell") %>%
-						mutate(Condition = sapply(X = strsplit(colnames(seuObject), split = "_"), FUN = "[", 1), Sex = sapply(X = strsplit(colnames(seuObject), split = "_"), FUN = "[", 2)) %>%
-						unite("Genotype", Condition:Sex, remove = FALSE) %>%
+						mutate(Genotype = sapply(X = strsplit(colnames(seuObject), split = "_"), FUN = "[", 1)) %>%
 			        	dplyr::rename(nUMI = nCount_RNA, nGene = nFeature_RNA) %>%
 			        	column_to_rownames("Cell")
 
-save(seuObject,file="output/JenniferCho_SeuratObj_Unfilt.RData")
-rm(WT_F,WT_M,HET_F,HET_M,WT_F_obj,WT_M_obj,HET_F_obj,HET_M_obj)
+save(seuObject,file="output_initial/Brandon_SeuratObj_Unfilt.RData")
+rm(SalineCPP_obj,CocaineCPP_obj,SalineNPAS4_obj,CocaineNPAS4_obj,SalineCPP,CocaineCPP,SalineNPAS4,CocaineNPAS4)
 
 # Check
-pdf("output/Quality_Control_plots.pdf", width=6,height=4)
+pdf("output_initial/Quality_Control_plots.pdf", width=6,height=4)
 feats <- c("nUMI", "nGene", "pMito")
-VlnPlot(seuObject, group.by = "Condition", features = feats, pt.size = 0, ncol = 3) + 
+VlnPlot(seuObject, group.by = "Genotype", features = feats, pt.size = 0, ncol = 3) + 
     NoLegend()
 dev.off()
 
-pdf("output/Quality_Control_Scatter.pdf", width=5,height=4)
-FeatureScatter(seuObject, "nUMI", "nGene", group.by = "Condition", pt.size = 0)
+pdf("output_initial/Quality_Control_Scatter.pdf", width=5,height=4)
+FeatureScatter(seuObject, "nUMI", "nGene", group.by = "Genotype", pt.size = 0)
 dev.off()
 
 #pdf("output/UMIvsGene.pdf", width=5,height=4)
@@ -99,7 +96,7 @@ scatter <- seuObject@meta.data %>%
   	geom_vline(xintercept = 500) +
   	geom_hline(yintercept = 250) +
   	facet_wrap(~Genotype)
-ggsave("output/GeneXUMI.pdf", plot = scatter, width = 6, height = 4, units = "in", dpi = 150)
+ggsave("output_initial/GeneXUMI.pdf", plot = scatter, width = 6, height = 4, units = "in", dpi = 150)
 
 
 ##-------------------------------------------------------
@@ -114,7 +111,7 @@ ggsave("output/GeneXUMI.pdf", plot = scatter, width = 6, height = 4, units = "in
 mito_filtered <- seuObject@assays$RNA@counts[-grep("^mt-",rownames(seuObject@assays$RNA@counts)),]
 
 # Initialize the Seurat object with the raw (non-normalized data).
-seuObject_final <- CreateSeuratObject(counts = mito_filtered, project = "PFC")
+seuObject_final <- CreateSeuratObject(counts = mito_filtered, project = "Brandon")
 
 ## Add pMito info from meta data for all cells before filtering
 metaAll <- as.data.frame(seuObject@meta.data)
@@ -122,26 +119,26 @@ seuObject_final <- AddMetaData(object = seuObject_final, metadata = as.data.fram
 seuObject_final@meta.data$nCount_RNA <- NULL
 seuObject_final@meta.data$nFeature_RNA <- NULL
 
-seuObject_filt <- subset(x = seuObject_final, subset = nUMI < 15000 & pMito < 5 & nUMI > 200 & nGene > 250)
+seuObject_filt <- subset(x = seuObject_final, subset = nUMI < 10000 & pMito < 5 & nUMI > 1000 & nGene > 250)
 
-save(seuObject_filt,file="output/JenniferCho_SeuratObj_Filt.RData")
+save(seuObject_filt,file="output_initial/Brandon_SeuratObj_Filt.RData")
 rm(seuObject,seuObject_final)
 
 
 # Data Integration
 
-seuObject_split <- SplitObject(seuObject_filt, split.by = "Condition")
+seuObject_split <- SplitObject(seuObject_filt, split.by = "Genotype")
 
-seuObject_split <- seuObject_split[c("WT", "HET")]
+seuObject_split <- seuObject_split[c("SalineCPP", "CocaineCPP","SalineNPAS4","CocaineNPAS4")]
 
 for (i in 1:length(seuObject_split)) {
     seuObject_split[[i]] <- SCTransform(seuObject_split[[i]], 
-				    						vars.to.regress = c("nUMI","pMito","S.Score", "G2M.Score"), 
+				    						vars.to.regress = c("nUMI","pMito"), 
 											verbose = FALSE)
     }
 
 integ_features <- SelectIntegrationFeatures(object.list = seuObject_split, 
-											nfeatures = 3000) 
+											nfeatures = 4000) 
 
 seuObject_split <- PrepSCTIntegration(object.list = seuObject_split, 
 											anchor.features = integ_features)
@@ -154,7 +151,7 @@ seuObject_integrated <- IntegrateData(
 								anchorset = integ_anchors,
 								new.assay.name = "integrated",
 								normalization.method = "SCT",
-								dims = 1:50,
+								dims = 1:30,
 								k.weight = 100,
 								sd.weight = 1,
 								eps = 0.5,
@@ -168,12 +165,12 @@ seuObject_integrated <- RunPCA(object = seuObject_integrated,
 								weight.by.var = TRUE, 
 								ndims.print = 1:5, 
 								nfeatures.print = 30, 
-								npcs = 50, 
+								npcs = 30, 
 								reduction.name = "pca")
 
 seuObject_integrated <- FindNeighbors(object = seuObject_integrated, 
 										reduction = "pca", 
-										dims = 1:50, 
+										dims = 1:30, 
 										nn.eps = 0.5)
 
 seuObject_integrated <- FindClusters(object = seuObject_integrated, 
@@ -190,7 +187,7 @@ Idents(object = seuObject_integrated) <- "integrated_snn_res.0.5"
 
 seuObject_integrated <- RunUMAP(object = seuObject_integrated, 
 										reduction = "pca", 
-										dims = 1:50)
+										dims = 1:30)
 
 # Select the RNA counts slot to be the default assay
 DefaultAssay(seuObject_integrated) <- "RNA"
@@ -201,13 +198,13 @@ seuObject_integrated <- NormalizeData(object = seuObject_integrated,
 
 seuObject_integrated@meta.data <- seuObject_integrated@meta.data %>%
                                        rownames_to_column("TMP") %>%
-                                       select(TMP,orig.ident,Genotype,pMito,nCount_SCT,nFeature_SCT,integrated_snn_res.0.5) %>%
+                                       select(TMP,orig.ident,Genotype,pMito,nCount_SCT,nFeature_SCT,integrated_snn_res.0.6) %>%
                                        column_to_rownames("TMP")
 
-save(seuObject_integrated, file = "output/JenniferCho_SeuratObj_Final.RData")
+save(seuObject_integrated, file = "output_initial/Brandon_SeuratObj_SCT_30pcs_05res.RData")
 
 # 
-pdf("output/Data_Integrated_UMAP.pdf", width = 10, height = 6)
+pdf("output_initial/Data_Integrated_UMAP.pdf", width = 10, height = 6)
 p1 <- DimPlot(object = seuObject_integrated, reduction = "umap", label = TRUE, pt.size = 0.5) + theme(legend.position="none")
 p2 <- DimPlot(object = seuObject_integrated, reduction = "umap", label = FALSE, pt.size = 0.5, group.by="Genotype")
 plot_grid(p1, p2)
@@ -220,4 +217,4 @@ seuObject_integrated_slim <- DietSeurat(seuObject_integrated,
 										assays="RNA",
 										dimreducs = c("pca","umap"))
 
-save(seuObject_integrated_slim, file = "output/JenniferCho_SeuratObj_Final_Slimmed.RData")
+save(seuObject_integrated_slim, file = "output_initial/Brandon_SeuratObj_SCT_30pcs_05res_Slimmed.RData")
