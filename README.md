@@ -10,8 +10,7 @@ This repository contains analysis code for the single nuclei RNA-seq project car
 If you use anything in this repository please cite the following publication:
 
 Paper URL: 
-
-[https://www.biorxiv.org/content/10.1101/2022.09.04.506434v1.abstract](https://www.nature.com/articles/s41467-024-50099-1)
+https://www.nature.com/articles/s41467-024-50099-1
 
 ## Access the data with an app:
 
